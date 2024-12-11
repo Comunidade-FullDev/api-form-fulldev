@@ -28,7 +28,7 @@ public class SecurityConfiguration {
     SecurityFilter securityFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, OtherLoginSuccessHandler successHandler) throws Exception{
 
         httpSecurity.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -38,12 +38,23 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/auth/delete/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/auth/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/forms/public/{idPublic}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/forms/{idPublic}/answers").permitAll()
+                        .requestMatchers("/other-login/").permitAll()
+                        .requestMatchers("/other-login/google-auth-url", "/other-login/facebook-auth-url").permitAll()
                         .requestMatchers("/h2-console").permitAll()
                         .requestMatchers("/api/forms/public/**").permitAll()
                         .requestMatchers("/api/forms/**").authenticated()
                         .anyRequest().authenticated()
                 )
+                .oauth2Login(oauth -> {
+                    oauth.successHandler(successHandler);
+                    oauth.defaultSuccessUrl("/api/secured");
+                    oauth.failureUrl("/login?error=true");
+                        }
+                )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+
         return httpSecurity.build();
 
     }
@@ -52,7 +63,7 @@ public class SecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
 
@@ -70,4 +81,6 @@ public class SecurityConfiguration {
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
+
+
 }
