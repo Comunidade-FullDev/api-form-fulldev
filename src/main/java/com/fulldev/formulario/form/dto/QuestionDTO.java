@@ -1,4 +1,6 @@
 package com.fulldev.formulario.form.dto;
 
-public record QuestionDTO(String text, String type) {
+import java.util.List;
+
+public record QuestionDTO(String title, String questionDescription, String type, List<String> options, boolean required) {
 }
