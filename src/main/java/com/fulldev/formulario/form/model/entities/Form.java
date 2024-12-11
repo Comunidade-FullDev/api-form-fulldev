@@ -25,6 +25,25 @@ public class Form {
 
     private String createdBy;
 
+    private String link;
+
+    private String idPublic;
+
+    @Column(nullable = true)
+    private int responsesCount = 0;
+
+    @Column(nullable = true)
+    private int views = 0;
+
+    @Enumerated(EnumType.STRING)
+    private FormHasLogin formHasLogin = FormHasLogin.PUBLIC;
+
+    @Column(nullable = true)
+    private List<String> accessUsername;
+
+    @Column(nullable = true)
+    private String accessPassword;
+
     @Column(nullable = false)
     private Boolean isPublished = false;
 
@@ -36,4 +55,5 @@ public class Form {
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
 }
