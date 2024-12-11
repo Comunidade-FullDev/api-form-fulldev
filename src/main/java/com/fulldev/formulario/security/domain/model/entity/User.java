@@ -27,8 +27,8 @@ public class User implements UserDetails {
     private String id;
 
     @Column(name = "login", nullable = false, unique = true)
-    @NotBlank(message = "O login é obrigatório")
-    @Email
+    @NotBlank(message = "O email é obrigatório")
+    @Email(message = "inválido")
     private String email;
 
     private String password;
