@@ -18,4 +18,16 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public User saveUser(User user){
+        return userRepository.save(user);
+    }
+
+    public boolean passwordisValid(String password){
+        if (password == null || password.isEmpty()){
+            return false;
+        }else {
+            return true;
+        }
+    }
+
 }
