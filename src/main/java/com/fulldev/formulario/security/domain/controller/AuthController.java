@@ -9,6 +9,7 @@ import com.fulldev.formulario.security.domain.dto.RegisterDTO;
 import com.fulldev.formulario.security.domain.model.entity.User;
 import com.fulldev.formulario.security.domain.repository.UserRepository;
 import com.fulldev.formulario.security.domain.service.EmailService;
+import com.fulldev.formulario.security.domain.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -38,14 +39,21 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private UserService userService;
+
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody @Valid AuthDTO authDTO) {
         try {
             User user = (User) userRepository.findByEmail(authDTO.email());
 
-            if (user == null || !user.isVerified()) {
-                return ResponseEntity.status(403).body("Usuário não verificado.");
-            }
+            if (user == null)
+                return ResponseEntity.status(403).body("Não foi possível realizar o login do usuário. Existe algum campo obrigatório nulo ou vazio.");
+
+
+            if (!user.isVerified())
+                return ResponseEntity.status(403).body("Email do usuário não verificado.");
+
 
             var emailAndPassword = new UsernamePasswordAuthenticationToken(authDTO.email(), authDTO.password());
             var auth = this.authenticationManager.authenticate(emailAndPassword);
@@ -65,7 +73,11 @@ public class AuthController {
             if (this.userRepository.findByEmail(registerDTO.email()) != null)
                 return ResponseEntity.badRequest().body("Usuário já existe");
 
+            if (registerDTO.email() == null || !userService.passwordisValid(registerDTO.password()))
+                return ResponseEntity.status(403).body("Não foi possível realizar o registro do usuário. Existe algum campo obrigatório nulo ou vazio.");
+
             String encryptedPassword = new BCryptPasswordEncoder().encode(registerDTO.password());
+
             User user = new User(registerDTO.email(), encryptedPassword, UserRole.ADMIN);
 
             String verificationToken = java.util.UUID.randomUUID().toString();
