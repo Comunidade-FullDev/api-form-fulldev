@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface FormRepository extends JpaRepository<Form, Long> {
-    List<Form> findByCreatedBy(User user);
-    List<Form> findByIsPublishedTrue();
+    List<Form> findByCreatedBy(String email);
+    List<Form> findByCreatedByAndIsPublishedTrue(String createdBy);
+    Form findByidPublic(String idPublic);
 }
