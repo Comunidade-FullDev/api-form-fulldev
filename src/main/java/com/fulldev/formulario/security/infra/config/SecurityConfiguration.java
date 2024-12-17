@@ -27,31 +27,32 @@ public class SecurityConfiguration {
     @Autowired
     SecurityFilter securityFilter;
 
+    @Autowired
+    private OtherLoginSuccessHandler successHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, OtherLoginSuccessHandler successHandler) throws Exception{
 
         httpSecurity.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/auth/delete/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.GET, "/auth/verify").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/forms/public/{idPublic}").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/reset-password/confirm").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/forms/public/{formHasLoginType}/{idPublic}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/forms/{idPublic}/answers").permitAll()
                         .requestMatchers("/other-login/").permitAll()
-                        .requestMatchers("/other-login/google-auth-url", "/other-login/facebook-auth-url").permitAll()
-                        .requestMatchers("/h2-console").permitAll()
                         .requestMatchers("/api/forms/public/**").permitAll()
                         .requestMatchers("/api/forms/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth -> {
-                    oauth.successHandler(successHandler);
-                    oauth.defaultSuccessUrl("/api/secured");
-                    oauth.failureUrl("/login?error=true");
-                        }
+                .oauth2Login(oauth -> oauth
+                        .loginPage("https://fulldev-seven.vercel.app/login")
+                        .successHandler(successHandler)
+                        .failureUrl("/login?error=true")
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -62,15 +63,17 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("https://fulldev-seven.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cookie", "Accept"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
