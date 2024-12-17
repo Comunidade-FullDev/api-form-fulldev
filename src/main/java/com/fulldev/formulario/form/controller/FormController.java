@@ -16,6 +16,7 @@ import com.fulldev.formulario.security.domain.dto.RegisterDTO;
 import com.fulldev.formulario.security.domain.model.entity.User;
 import com.fulldev.formulario.security.domain.model.entity.UserRole;
 import com.fulldev.formulario.security.domain.repository.UserRepository;
+import com.fulldev.formulario.security.domain.service.EmailService;
 import com.fulldev.formulario.security.domain.service.TokenService;
 import com.fulldev.formulario.security.domain.service.UserService;
 import jakarta.validation.Valid;
@@ -26,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -50,8 +53,9 @@ public class FormController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
+    private final EmailService emailService;
 
-    private static final String BASE_URL = "http://localhost:3000/form/preview?";
+    private static final String BASE_URL = "https://fulldev-seven.vercel.app/form/preview?";
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUserToAnswerForm(@RequestBody @Valid RegisterDTO registerDTO) {
@@ -83,16 +87,21 @@ public class FormController {
     }
 
     @PatchMapping("/default-settings/{standard}")
-    public ResponseEntity defaultFormSettings(@PathVariable String standard, @RequestBody String password, Principal principal){
+    public ResponseEntity defaultFormSettings(@PathVariable String standard,
+                                              @RequestBody Map<String, Object> payload,
+                                              Principal principal){
         try{
         String loggedUserEmail = principal.getName();
         List<Form> forms = formRepository.findByCreatedBy(loggedUserEmail);
+            String password = (String) payload.get("password");
+            boolean sendEmail = (Boolean) payload.get("sendEmail");
+
             if (standard.equals(FormHasLogin.PRIVATE.toString().toLowerCase())) {
                 for (Form form : forms) {
                     if (form.getIsPublished()) {
                         String idPublic = UUID.randomUUID().toString();
                         String link = BASE_URL + "logintype=" + standard + "&form=" + idPublic;
-
+                        form.setSendEmailResponsesCount(sendEmail);
                         form.setFormHasLogin(FormHasLogin.PRIVATE);
                         form.setLink(link);
                         form.setIdPublic(idPublic);
@@ -105,7 +114,7 @@ public class FormController {
                     if (form.getIsPublished()) {
                         String idPublic = UUID.randomUUID().toString();
                         String link = BASE_URL + "logintype=" + standard + "&form=" + idPublic;
-
+                        form.setSendEmailResponsesCount(sendEmail);
                         form.setFormHasLogin(FormHasLogin.PASSWORD);
                         form.setAccessPassword(password);
                         form.setLink(link);
@@ -119,7 +128,7 @@ public class FormController {
                     if (form.getIsPublished()) {
                         String idPublic = UUID.randomUUID().toString();
                         String link = BASE_URL + "logintype=" + standard + "&form=" + idPublic;
-
+                        form.setSendEmailResponsesCount(sendEmail);
                         form.setFormHasLogin(FormHasLogin.PUBLIC);
                         form.setLink(link);
                         form.setIdPublic(idPublic);
@@ -138,7 +147,13 @@ public class FormController {
 
     @PostMapping
     public ResponseEntity<Form> createForm(@RequestBody @Valid FormDTO formDTO, Principal principal) {
-        User user = (User) userRepository.findByEmail(principal.getName());
+        String email = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
+        User user = (User) userRepository.findByEmail(email);
 
         Form form = new Form();
         form.setTitle(formDTO.title());
@@ -165,6 +180,11 @@ public class FormController {
     public ResponseEntity<List<Form>> getFormsByLoggedUser(Principal principal) {
         String email = principal.getName();
 
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
+
         User user = (User) userRepository.findByEmail(email);
 
         List<Form> forms = formRepository.findByCreatedBy(user.getEmail());
@@ -172,9 +192,15 @@ public class FormController {
         return ResponseEntity.ok(forms);
     }
 
+
     @GetMapping("/my-forms/public")
     public ResponseEntity<List<Form>> getMyPublicForms(Principal principal){
         String email = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
 
         List<Form> forms = formRepository.findByCreatedByAndIsPublishedTrue(email);
 
@@ -183,10 +209,17 @@ public class FormController {
 
     @PatchMapping("/{id}/publish")
     public ResponseEntity<?> publishForm(@PathVariable Long id, Principal principal) {
+        String email = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
+
         Form form = formRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Formulário não encontrado"));
 
-        if (!form.getCreatedBy().equals(principal.getName())) {
+        if (!form.getCreatedBy().equals(email)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Formulário não encontrado");
         }
         String idPublic = UUID.randomUUID().toString();
@@ -203,10 +236,15 @@ public class FormController {
     @GetMapping("/public/{formHasLoginType}/{idPublic}")
     public ResponseEntity<?> getPublicForm(@PathVariable String formHasLoginType, @PathVariable String idPublic, @RequestParam(required = false) String password, Principal principal) {
         Form form = formRepository.findByidPublic(idPublic);
+        String email = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
 
         if (form == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Formulário não encontrado. O link fornecido não existe");
-
 
         System.out.println(formHasLoginType);
         System.out.println(password.equals("123456789"));
@@ -225,10 +263,10 @@ public class FormController {
 
             if (formHasLoginType.equals(FormHasLogin.PRIVATE.toString().toLowerCase())) {
 
-                if (principal.getName().isEmpty())
+                if (email.isEmpty())
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Autenticação necessária. Esse formulário é: " + form.getFormHasLogin());
 
-                if (this.userRepository.findByEmail(principal.getName()) != null)
+                if (this.userRepository.findByEmail(email) != null)
                     return ResponseEntity.ok(form);
 
             }
@@ -270,15 +308,36 @@ public class FormController {
         form.setResponsesCount(countResponses);
         formRepository.save(form);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body("Response submitted successfully.");
-    }
+        if (countResponses % 10 == 0 && form.isSendEmailResponsesCount()) {
+            String email = form.getCreatedBy();
+            String subject = "Atualização do Formulário: Respostas Recebidas";
+            String message = String.format(
+                    "<p>Olá %s,</p>" +
+                            "<p>Seu formulário '%s' recebeu um total de %d respostas!</p>" +
+                            "<p>Veja suas novas estatísticas atualizadas e importe um arquivo CSV com elas.</p>" +
+                            "<p><a href='https://fulldev-seven.vercel.app/form/builder?id=%d'>Clique aqui para acessar as estatísticas</a></p>",
+                    "usuário do construtor de forms da fulldev", form.getTitle(), countResponses, form.getId()
+            );
+
+            emailService.sendSimpleEmail(email, subject, message);
+        }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body("Response submitted successfully.");
+        }
 
     @GetMapping("/{id}/answers")
     public ResponseEntity<List<Answer>> getFormAnswers(@PathVariable Long id, Principal principal) {
+        String email = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
+
         Form form = formRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Formulário não encontrado"));
 
-        if (!form.getCreatedBy().equals(principal.getName())) {
+        if (!form.getCreatedBy().equals(email)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
 
@@ -289,6 +348,11 @@ public class FormController {
     @GetMapping("/{id}")
     public ResponseEntity<Form> getFormById(@PathVariable Long id, Principal principal) {
         String userEmail = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            userEmail = oAuth2User.getAttribute("email");
+        }
         User user = (User) userRepository.findByEmail(userEmail);
 
         Form form = formRepository.findById(id)
@@ -304,6 +368,12 @@ public class FormController {
     @PutMapping("/{id}")
     public ResponseEntity<Form> updateForm(@PathVariable Long id, @RequestBody FormDTO formDTO, Principal principal) {
         String email = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
+
         User user = (User) userRepository.findByEmail(email);
         Form form = formRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Formulário não encontrado"));
@@ -320,6 +390,13 @@ public class FormController {
     @DeleteMapping("/{id}")
     public ResponseEntity deleteFormById(@PathVariable Long id, Principal principal){
         String email = principal.getName();
+
+        if (principal instanceof OAuth2AuthenticationToken) {
+            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+            email = oAuth2User.getAttribute("email");
+        }
+
+
         User user = (User) userRepository.findByEmail(email);
         Form form = formRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Formulário não encontrado"));
