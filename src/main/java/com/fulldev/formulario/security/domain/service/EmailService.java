@@ -37,6 +37,46 @@ public class EmailService {
         }
     }
 
+    public void sendSimpleEmail(String to, String subject, String text) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(text, true);
+
+            mailSender.send(message);
+            System.out.println("Email enviado com sucesso para " + to);
+        } catch (jakarta.mail.MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public void sendPasswordResetEmail(String to, String subject, String resetLink) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(buildPasswordResetEmailContent(resetLink), true);
+
+            mailSender.send(message);
+            System.out.println("email de redefinição enviado");
+        } catch (jakarta.mail.MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String buildPasswordResetEmailContent(String resetLink) {
+        return "<p>Olá,</p>" +
+                "<p>Recebemos uma solicitação para redefinir sua senha. Clique no link abaixo para redefini-la:</p>" +
+                "<a href=\"" + resetLink + "\">Redefinir Senha</a>" +
+                "<p>Se você não solicitou a redefinição, ignore este e-mail.</p>";
+    }
+
     private String buildVerificationEmailContent(String verificationLink) {
         return "<p>Olá,</p>" +
                 "<p>Obrigado por se cadastrar. Clique no link abaixo para verificar sua conta:</p>" +
