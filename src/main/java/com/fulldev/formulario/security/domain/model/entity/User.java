@@ -40,6 +40,8 @@ public class User implements UserDetails {
 
     private String verificationToken;
 
+    private String resetToken;
+
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Form> forms = new ArrayList<>();
 
