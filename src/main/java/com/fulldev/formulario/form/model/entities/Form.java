@@ -27,6 +27,8 @@ public class Form {
 
     private String link;
 
+    private boolean sendEmailResponsesCount = true;
+
     private String idPublic;
 
     @Column(nullable = true)
