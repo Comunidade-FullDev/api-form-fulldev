@@ -55,7 +55,7 @@ public class FormController {
     private final TokenService tokenService;
     private final EmailService emailService;
 
-    private static final String BASE_URL = "https://fulldev-seven.vercel.app/form/preview?";
+    private static final String BASE_URL = "http://localhost:3000/form/preview?";
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUserToAnswerForm(@RequestBody @Valid RegisterDTO registerDTO) {
@@ -315,7 +315,7 @@ public class FormController {
                     "<p>Olá %s,</p>" +
                             "<p>Seu formulário '%s' recebeu um total de %d respostas!</p>" +
                             "<p>Veja suas novas estatísticas atualizadas e importe um arquivo CSV com elas.</p>" +
-                            "<p><a href='https://fulldev-seven.vercel.app/form/builder?id=%d'>Clique aqui para acessar as estatísticas</a></p>",
+                            "<p><a href='http://localhost:3000/form/builder?id=%d'>Clique aqui para acessar as estatísticas</a></p>",
                     "usuário do construtor de forms da fulldev", form.getTitle(), countResponses, form.getId()
             );
 

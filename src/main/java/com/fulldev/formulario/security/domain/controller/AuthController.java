@@ -86,7 +86,7 @@ public class AuthController {
             String verificationToken = java.util.UUID.randomUUID().toString();
             user.setVerificationToken(verificationToken);
 
-            String verificationLink = "https://fulldev-seven.vercel.app/verify?token=" + verificationToken;
+            String verificationLink = "http://localhost:3000/verify?token=" + verificationToken;
             emailService.sendVerificationEmail(user.getUsername(), "Confirmação de Cadastro", verificationLink);
 
             this.userRepository.save(user);
@@ -128,7 +128,7 @@ public class AuthController {
         String resetToken = UUID.randomUUID().toString();
         user.setResetToken(resetToken);
 
-        String resetLink = "https://fulldev-seven.vercel.app/reset-password?token=" + resetToken;
+        String resetLink = "http://localhost:3000/reset-password?token=" + resetToken;
         emailService.sendPasswordResetEmail(user.getEmail(), "Redefinição de Senha", resetLink);
 
         userRepository.save(user);

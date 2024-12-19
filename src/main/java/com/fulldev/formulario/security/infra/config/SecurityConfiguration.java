@@ -34,8 +34,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, OtherLoginSuccessHandler successHandler) throws Exception{
 
         httpSecurity.csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
@@ -44,13 +44,14 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/auth/reset-password/confirm").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/forms/public/{formHasLoginType}/{idPublic}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/forms/{idPublic}/answers").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/other-login/").permitAll()
                         .requestMatchers("/api/forms/public/**").permitAll()
                         .requestMatchers("/api/forms/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
-                        .loginPage("https://fulldev-seven.vercel.app/login")
+                        .loginPage("http://localhost:3000/login")
                         .successHandler(successHandler)
                         .failureUrl("/login?error=true")
                 )
@@ -63,11 +64,19 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://fulldev-seven.vercel.app"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cookie", "Accept"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
+
+        System.out.println("CORS Configuration Details:");
+        System.out.println("Allowed Origins: " + configuration.getAllowedOrigins());
+        System.out.println("Allowed Methods: " + configuration.getAllowedMethods());
+        System.out.println("Allowed Headers: " + configuration.getAllowedHeaders());
+        System.out.println("Exposed Headers: " + configuration.getExposedHeaders());
+        System.out.println("Allow Credentials: " + configuration.getAllowCredentials());
+
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -57,7 +57,7 @@ public class OtherLoginSuccessHandler extends SavedRequestAwareAuthenticationSuc
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);
         response.addCookie(jwtCookie);
 
-        response.sendRedirect("https://fulldev-seven.vercel.app/workspace");
+        response.sendRedirect("http://localhost:3000/workspace");
     }
 
 }
