@@ -236,12 +236,17 @@ public class FormController {
     @GetMapping("/public/{formHasLoginType}/{idPublic}")
     public ResponseEntity<?> getPublicForm(@PathVariable String formHasLoginType, @PathVariable String idPublic, @RequestParam(required = false) String password, Principal principal) {
         Form form = formRepository.findByidPublic(idPublic);
-        String email = principal.getName();
+        String email = "";
 
-        if (principal instanceof OAuth2AuthenticationToken) {
-            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
-            email = oAuth2User.getAttribute("email");
+        if(principal != null) {
+            email = principal.getName();
+
+            if (principal instanceof OAuth2AuthenticationToken) {
+                OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+                email = oAuth2User.getAttribute("email");
+            }
         }
+
 
         if (form == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Formulário não encontrado. O link fornecido não existe");
