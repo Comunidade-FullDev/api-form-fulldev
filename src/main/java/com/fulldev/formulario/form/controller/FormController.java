@@ -54,7 +54,6 @@ public class FormController {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
     private final EmailService emailService;
-
     private static final String BASE_URL = "http://localhost:3000/form/preview?";
 
     @PostMapping("/register")
@@ -234,13 +233,16 @@ public class FormController {
     }
 
     @GetMapping("/public/{formHasLoginType}/{idPublic}")
-    public ResponseEntity<?> getPublicForm(@PathVariable String formHasLoginType, @PathVariable String idPublic, @RequestParam(required = false) String password, Principal principal) {
+    public ResponseEntity<?> getPublicForm(@PathVariable String formHasLoginType, @PathVariable String idPublic, @RequestParam(required = false) String password, @RequestParam(required = false) Principal principal) {
         Form form = formRepository.findByidPublic(idPublic);
-        String email = principal.getName();
+        String email = "";
+        if(principal != null) {
+             email = principal.getName();
 
-        if (principal instanceof OAuth2AuthenticationToken) {
-            OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
-            email = oAuth2User.getAttribute("email");
+            if (principal instanceof OAuth2AuthenticationToken) {
+                OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
+                email = oAuth2User.getAttribute("email");
+            }
         }
 
         if (form == null)
