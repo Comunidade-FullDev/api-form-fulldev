@@ -16,7 +16,7 @@ import com.fulldev.formulario.security.domain.dto.RegisterDTO;
 import com.fulldev.formulario.security.domain.model.entity.User;
 import com.fulldev.formulario.security.domain.model.entity.UserRole;
 import com.fulldev.formulario.security.domain.repository.UserRepository;
-import com.fulldev.formulario.security.domain.service.EmailService;
+import com.fulldev.formulario.form.service.EmailService;
 import com.fulldev.formulario.security.domain.service.TokenService;
 import com.fulldev.formulario.security.domain.service.UserService;
 import jakarta.validation.Valid;
@@ -32,13 +32,10 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static java.util.Arrays.*;
 
 @RestController
 @RequestMapping("/api/forms")
@@ -234,12 +231,11 @@ public class FormController {
     }
 
     @GetMapping("/public/{formHasLoginType}/{idPublic}")
-    public ResponseEntity<?> getPublicForm(@PathVariable String formHasLoginType, @PathVariable String idPublic, @RequestParam(required = false) String password, Principal principal) {
+    public ResponseEntity<?> getPublicForm(@PathVariable String formHasLoginType, @PathVariable String idPublic, @RequestParam(required = false) String password, @RequestParam(required = false) Principal principal) {
         Form form = formRepository.findByidPublic(idPublic);
         String email = "";
-
         if(principal != null) {
-            email = principal.getName();
+             email = principal.getName();
 
             if (principal instanceof OAuth2AuthenticationToken) {
                 OAuth2User oAuth2User = ((OAuth2AuthenticationToken) principal).getPrincipal();
@@ -247,13 +243,9 @@ public class FormController {
             }
         }
 
-
         if (form == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Formulário não encontrado. O link fornecido não existe");
 
-        System.out.println(formHasLoginType);
-        System.out.println(password.equals("123456789"));
-        System.out.println(password);
         int views = form.getViews() + 1;
         form.setViews(views);
         formRepository.save(form);

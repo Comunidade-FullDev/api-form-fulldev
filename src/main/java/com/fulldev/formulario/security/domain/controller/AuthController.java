@@ -8,17 +8,14 @@ import com.fulldev.formulario.security.domain.dto.LoginResponseDTO;
 import com.fulldev.formulario.security.domain.dto.RegisterDTO;
 import com.fulldev.formulario.security.domain.model.entity.User;
 import com.fulldev.formulario.security.domain.repository.UserRepository;
-import com.fulldev.formulario.security.domain.service.EmailService;
+import com.fulldev.formulario.form.service.EmailService;
 import com.fulldev.formulario.security.domain.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -86,7 +83,7 @@ public class AuthController {
             String verificationToken = java.util.UUID.randomUUID().toString();
             user.setVerificationToken(verificationToken);
 
-            String verificationLink = "https://fulldev-seven.vercel.app/verify?token=" + verificationToken;
+            String verificationLink = "http://localhost:3000/verify?token=" + verificationToken;
             emailService.sendVerificationEmail(user.getUsername(), "Confirmação de Cadastro", verificationLink);
 
             this.userRepository.save(user);
@@ -128,7 +125,7 @@ public class AuthController {
         String resetToken = UUID.randomUUID().toString();
         user.setResetToken(resetToken);
 
-        String resetLink = "https://fulldev-seven.vercel.app/reset-password?token=" + resetToken;
+        String resetLink = "http://localhost:3000/reset-password?token=" + resetToken;
         emailService.sendPasswordResetEmail(user.getEmail(), "Redefinição de Senha", resetLink);
 
         userRepository.save(user);
