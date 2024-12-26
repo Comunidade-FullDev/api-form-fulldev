@@ -248,9 +248,6 @@ public class FormController {
         if (form == null)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Formulário não encontrado. O link fornecido não existe");
 
-        System.out.println(formHasLoginType);
-        System.out.println(password.equals("123456789"));
-        System.out.println(password);
         int views = form.getViews() + 1;
         form.setViews(views);
         formRepository.save(form);
