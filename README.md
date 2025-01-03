@@ -126,6 +126,25 @@ spring.security.oauth2.client.registration.google.client-secret=${CLIENT_SECRET_
 
 ---
 
+## Colaboradores
+
+<div>
+  <a href="https://github.com/EricSouzaDosSantos">
+    <img src="https://github.com/EricSouzaDosSantos.png" width="60px"/>
+  </a>
+  <a href="https://github.com/gabrieldiassantiago">
+    <img src="https://github.com/gabrieldiassantiago.png" width="60px"/>
+  </a>
+  <a href="https://github.com/Carlosaugusto222">
+    <img src="https://github.com/Carlosaugusto222.png" width="60px"/>
+  </a>
+  <a href="https://github.com/DevGustavoGantois">
+    <img src="https://github.com/DevGustavoGantois.png" width="60px"/>
+  </a>
+</div>
+
+---
+
 ## Contribuição
 
 Este projeto foi desenvolvido para o hackaton da fullDev, mas sinta-se à vontade para contribuir com sugestões, correções de bugs ou até mesmo novas funcionalidades. Todas as contribuições são bem-vindas!
