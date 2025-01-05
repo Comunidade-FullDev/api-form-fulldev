@@ -3,12 +3,18 @@ package com.fulldev.formulario.security.domain.service;
 import com.fulldev.formulario.security.domain.model.entity.User;
 import com.fulldev.formulario.security.domain.repository.UserRepository;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.MailException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
 @Service
+@EnableAsync
 public class EmailService {
 
     @Autowired
@@ -17,6 +23,12 @@ public class EmailService {
     @Autowired
     private UserRepository userRepository;
 
+    @Async("emailTaskExecutor")
+    @Retryable(
+            value = { MailException.class, jakarta.mail.MessagingException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000)
+    )
     public void sendVerificationEmail(String to, String subject, String verificationLink) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -25,9 +37,9 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             User user = (User) userRepository.findByEmail(to);
-            if (user != null && user.isVerified()){
+            if (user != null && user.isVerified()) {
                 helper.setText(buildEmailContent(), true);
-            }else {
+            } else {
                 helper.setText(buildVerificationEmailContent(verificationLink), true);
             }
 
@@ -37,6 +49,12 @@ public class EmailService {
         }
     }
 
+    @Async("emailTaskExecutor")
+    @Retryable(
+            value = { MailException.class, jakarta.mail.MessagingException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000)
+    )
     public void sendSimpleEmail(String to, String subject, String text) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -53,7 +71,12 @@ public class EmailService {
         }
     }
 
-
+    @Async("emailTaskExecutor")
+    @Retryable(
+            value = { MailException.class, jakarta.mail.MessagingException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000)
+    )
     public void sendPasswordResetEmail(String to, String subject, String resetLink) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -84,10 +107,10 @@ public class EmailService {
                 "<p>Se você não se cadastrou, ignore este e-mail.</p>";
     }
 
-    private String buildEmailContent(){
+    private String buildEmailContent() {
         return "<p>Olá,</p>" +
                 "<p>Estamos muito felizes em informar que seu endereço de e-mail foi verificado com sucesso.</p>" +
-                "<p>Agora você pode aproveitar todos os recursos disponíveis no contrutor de formulários da fulldev.</p>"+
+                "<p>Agora você pode aproveitar todos os recursos disponíveis no contrutor de formulários da fulldev.</p>" +
                 "<p>Mais uma vez, obrigado por fazer parte da nossa comunidade!</p>" +
                 "<p>Atenciosamente,</p>" +
                 "<p>Equipe da fullDev</p>";
