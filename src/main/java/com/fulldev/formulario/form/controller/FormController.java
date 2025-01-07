@@ -16,7 +16,7 @@ import com.fulldev.formulario.security.domain.dto.RegisterDTO;
 import com.fulldev.formulario.security.domain.model.entity.User;
 import com.fulldev.formulario.security.domain.model.entity.UserRole;
 import com.fulldev.formulario.security.domain.repository.UserRepository;
-import com.fulldev.formulario.security.domain.service.EmailService;
+import com.fulldev.formulario.form.service.EmailService;
 import com.fulldev.formulario.security.domain.service.TokenService;
 import com.fulldev.formulario.security.domain.service.UserService;
 import jakarta.validation.Valid;
@@ -32,13 +32,10 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static java.util.Arrays.*;
 
 @RestController
 @RequestMapping("/api/forms")
