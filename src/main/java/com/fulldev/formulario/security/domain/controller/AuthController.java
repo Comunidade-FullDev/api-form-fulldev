@@ -12,12 +12,14 @@ import com.fulldev.formulario.form.service.EmailService;
 import com.fulldev.formulario.security.domain.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -164,7 +166,12 @@ public class AuthController {
 
 
     @DeleteMapping(path = {"/delete/{id}"})
-    public ResponseEntity delete(@PathVariable String id){
+    public ResponseEntity delete(@PathVariable String id, Principal principal){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        if(!(user.getEmail().equals(principal.getName())))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("você não possui permissão para deletar esse usuário");
+
         return userRepository.findById(id)
                 .map(record -> {userRepository.deleteById(id);
                     return ResponseEntity.ok().body(record);
